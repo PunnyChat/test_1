@@ -1,0 +1,1257 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>แบบคัดกรองภาวะซึมเศร้า | MDD Screening</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f3ef;
+    --surface: #ffffff;
+    --surface2: #f0ede8;
+    --border: #d8d3cb;
+    --text: #1a1714;
+    --text-muted: #7a7470;
+    --accent: #2d6a4f;
+    --accent-light: #d8f3dc;
+    --accent2: #b7410e;
+    --accent2-light: #fde8e0;
+    --warning: #d4a017;
+    --warning-light: #fef9e7;
+    --radius: 8px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Sarabun', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding: 24px 16px 80px; }
+  .container { max-width: 720px; margin: 0 auto; }
+
+  .header { background: var(--accent); color: white; border-radius: 12px 12px 0 0; padding: 32px 36px 24px; }
+  .header h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 6px; }
+  .header p { font-size: 0.92rem; opacity: 0.85; line-height: 1.6; }
+  .privacy-badge { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); border-radius: 6px; padding: 12px 14px; margin-top: 16px; font-size: 0.85rem; display: flex; align-items: flex-start; gap: 10px; line-height: 1.65; }
+  .privacy-badge .icon { font-size: 1.2rem; flex-shrink: 0; margin-top: 2px; }
+
+  .progress-bar { background: var(--border); height: 5px; overflow: hidden; }
+  .progress-fill { background: var(--accent); height: 100%; transition: width 0.4s ease; width: 0%; }
+
+  .section { background: var(--surface); border: 1px solid var(--border); border-top: none; padding: 28px 36px; display: none; }
+  .section.active { display: block; }
+  .section:last-of-type { border-radius: 0 0 12px 12px; }
+
+  .section-label { font-size: 0.75rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; }
+  .section-title { font-size: 1.2rem; font-weight: 700; color: var(--accent); margin-bottom: 20px; padding-bottom: 12px; border-bottom: 2px solid var(--accent-light); }
+
+  .field { margin-bottom: 22px; }
+  .field > label { display: block; font-weight: 600; font-size: 0.95rem; margin-bottom: 10px; color: var(--text); line-height: 1.5; }
+  .field label .num { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; background: var(--accent); color: white; border-radius: 50%; font-size: 0.75rem; font-weight: 700; margin-right: 8px; flex-shrink: 0; }
+
+  input[type="text"] { width: 100%; padding: 10px 14px; border: 1.5px solid var(--border); border-radius: var(--radius); font-family: 'Sarabun', sans-serif; font-size: 0.95rem; background: var(--bg); color: var(--text); transition: border-color 0.2s; }
+  input[type="text"]:focus { outline: none; border-color: var(--accent); background: white; }
+
+  .radio-group, .checkbox-group { display: flex; flex-direction: column; gap: 8px; }
+  .radio-group.inline { flex-direction: row; flex-wrap: wrap; gap: 10px; }
+
+  .option-card { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border: 1.5px solid var(--border); border-radius: var(--radius); cursor: pointer; transition: all 0.15s; background: var(--bg); font-size: 0.92rem; line-height: 1.4; }
+  .option-card:hover { border-color: var(--accent); background: var(--accent-light); }
+  .option-card input { accent-color: var(--accent); flex-shrink: 0; }
+  .option-card.selected { border-color: var(--accent); background: var(--accent-light); }
+
+  .q-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+  .q-table th { background: var(--surface2); padding: 10px 12px; text-align: center; font-weight: 600; border: 1px solid var(--border); font-size: 0.82rem; color: var(--text-muted); line-height: 1.4; }
+  .q-table th:first-child { text-align: left; }
+  .q-table td { padding: 12px; border: 1px solid var(--border); vertical-align: middle; line-height: 1.5; text-align: left; word-wrap: break-word; overflow-wrap: break-word; }
+  .q-table td.radio-col { text-align: center; width: 60px; }
+  .q-table tr:nth-child(even) td { background: var(--surface2); }
+  .q-table td input[type="radio"] { accent-color: var(--accent); transform: scale(1.2); }
+
+  .code-display { font-family: 'IBM Plex Mono', monospace; font-size: 0.72rem; background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 10px 14px; color: var(--text-muted); margin-top: 8px; word-break: break-all; display: flex; align-items: flex-start; gap: 10px; }
+  .code-label { font-size: 0.75rem; font-family: 'Sarabun', sans-serif; color: var(--accent); white-space: nowrap; font-weight: 700; flex-shrink: 0; margin-top: 1px; }
+
+  .info-box { background: var(--warning-light); border: 1px solid var(--warning); border-radius: var(--radius); padding: 14px 16px; font-size: 0.88rem; margin-bottom: 20px; line-height: 1.7; }
+  .info-box strong { color: #a07800; }
+  .note { font-size: 0.78rem; color: var(--text-muted); margin-top: 6px; line-height: 1.5; }
+  .hint-box { margin-top: 14px; font-size: 0.82rem; color: var(--text-muted); background: var(--surface2); border-radius: 6px; padding: 10px 14px; line-height: 1.6; }
+
+  .btn-row { display: flex; justify-content: space-between; align-items: center; margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--border); }
+  .btn { padding: 12px 28px; border-radius: var(--radius); font-family: 'Sarabun', sans-serif; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.15s; border: none; }
+  .btn-primary { background: var(--accent); color: white; }
+  .btn-primary:hover { background: #235a40; }
+  .btn-secondary { background: transparent; color: var(--text-muted); border: 1.5px solid var(--border); }
+  .btn-secondary:hover { border-color: var(--text-muted); }
+  .btn-danger { background: var(--accent2); color: white; }
+  .btn-danger:hover { background: #9a360b; }
+  .step-indicator { font-size: 0.82rem; color: var(--text-muted); }
+
+  .result-card { border-radius: 10px; padding: 22px; margin-bottom: 16px; }
+  .result-card.low    { background: var(--accent-light); border: 2px solid var(--accent); }
+  .result-card.moderate { background: var(--warning-light); border: 2px solid var(--warning); }
+  .result-card.high   { background: var(--accent2-light); border: 2px solid var(--accent2); }
+  .result-card h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 8px; }
+  .result-card p { font-size: 0.9rem; line-height: 1.7; }
+
+  .hospital-list { list-style: none; }
+  .hospital-list li { padding: 10px 14px; border-bottom: 1px solid var(--border); font-size: 0.88rem; display: flex; align-items: flex-start; gap: 8px; flex-wrap: wrap; line-height: 1.5; }
+  .hospital-list li:last-child { border-bottom: none; }
+  .hospital-list .tel { color: var(--accent); font-weight: 600; margin-left: auto; }
+
+  .ref-box { font-family: 'IBM Plex Mono', monospace; font-size: 0.75rem; background: var(--surface2); border: 1px dashed var(--border); border-radius: 6px; padding: 14px 16px; margin-top: 16px; color: var(--text-muted); }
+
+  /* Pilot section */
+  .pilot-box { background: #f0f4ff; border: 1.5px solid #7b9cdf; border-radius: 10px; padding: 22px 24px; margin-bottom: 20px; }
+  .pilot-box h4 { color: #2a4a9c; font-size: 0.97rem; font-weight: 700; margin-bottom: 18px; display: flex; align-items: center; gap: 8px; }
+  .pilot-field { margin-bottom: 20px; }
+  .pilot-field label { font-size: 0.88rem; font-weight: 600; color: #2a4a9c; display: block; margin-bottom: 8px; line-height: 1.5; }
+  .pilot-field textarea { width: 100%; min-height: 80px; padding: 10px 14px; border: 1.5px solid #b0c0e8; border-radius: var(--radius); font-family: 'Sarabun', sans-serif; font-size: 0.92rem; background: white; color: var(--text); resize: vertical; line-height: 1.6; transition: border-color 0.2s; }
+  .pilot-field textarea:focus { outline: none; border-color: #2a4a9c; }
+  .pilot-rating { display: flex; gap: 8px; flex-wrap: wrap; }
+  .star-opt { display: flex; align-items: center; gap: 6px; padding: 7px 14px; border: 1.5px solid #b0c0e8; border-radius: 20px; cursor: pointer; font-size: 0.87rem; background: white; transition: all 0.15s; font-weight: 400; color: #3a4a7c; }
+  .star-opt:hover, .star-opt.selected { background: #dce8ff; border-color: #2a4a9c; color: #2a4a9c; font-weight: 600; }
+  .star-opt input { accent-color: #2a4a9c; }
+  .sub-note { font-size: 0.77rem; color: #5a6a9c; margin-top: 5px; }
+
+  .q-table tr.row-error td { background: #fde8e0 !important; }
+  .q-table tr.row-error td:nth-child(2) { color: #b7410e; font-weight: 600; }
+  .q-table tr.row-error td:nth-child(2)::after { content: ' *'; color: #c0392b; font-weight: 700; }
+  .row-err-msg { color: #c0392b; font-size: 0.82rem; font-weight: 600; margin-top: 10px; display: none; }
+  .row-err-msg.show { display: block; }
+  .error-msg.show { display: block; }
+  .field.has-error .option-card, .field.has-error input[type="text"],
+  .field.has-error select { border-color: #c0392b !important; }
+  .field.has-error > label .num { background: #c0392b; }
+
+  @media (max-width: 600px) {
+    .section, .header { padding: 20px 18px; }
+    .q-table th, .q-table td { padding: 8px 5px; font-size: 0.79rem; }
+    .radio-group.inline { flex-direction: column; }
+    .hospital-list .tel { margin-left: 0; }
+  }
+  .popup-open { display: flex !important; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<!-- HEADER -->
+<div class="header">
+  <h1>แบบคัดกรองภาวะซึมเศร้า (MDD Screening)</h1>
+  <p>แบบสอบถามนี้มี 5 ส่วน ใช้เวลาประมาณ 5–8 นาที ข้อมูลของท่านจะได้รับการปกป้องความเป็นส่วนตัวอย่างเต็มที่</p>
+  <div class="privacy-badge">
+    <span class="icon">🔒</span>
+    <span>
+      <strong>การปกป้องข้อมูลส่วนบุคคล:</strong><br>
+      รหัสพนักงานของท่านจะถูก<strong>เข้ารหัสปิดบังโดยอัตโนมัติ</strong>ทันทีที่กรอก โดยระบบจะไม่จัดเก็บข้อมูลส่วนตัวใดๆ ไว้ ตัวตนและข้อมูลของท่านจะถูกเก็บเป็นความลับอย่างเคร่งครัด และ<strong>ผู้วิจัยจะไม่สามารถเข้าถึงได้</strong>
+    </span>
+  </div>
+</div>
+<div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+
+<!-- SECTION 1: ข้อมูลส่วนตัว -->
+<div class="section active" id="sec1">
+  <div class="section-label">ส่วนที่ 1 จาก 5</div>
+  <div class="section-title">ข้อมูลส่วนตัว</div>
+
+  <div class="info-box">
+    <strong>หมายเหตุ:</strong> รหัสพนักงานของท่านจะถูก<strong>เข้ารหัสปิดบังโดยอัตโนมัติ</strong>ก่อนบันทึก โดยระบบจะไม่จัดเก็บข้อมูลส่วนตัวใดๆ ไว้ในระบบ
+  </div>
+
+  <div class="field" id="field-gender">
+    <label><span class="num">1</span> เพศ</label>
+    <div class="radio-group inline">
+      <label class="option-card"><input type="radio" name="gender" value="ชาย"> ชาย</label>
+      <label class="option-card"><input type="radio" name="gender" value="หญิง"> หญิง</label>
+      <label class="option-card"><input type="radio" name="gender" value="LGBTQ"> LGBTQ</label>
+      <label class="option-card"><input type="radio" name="gender" value="ไม่ระบุ"> ไม่ระบุ</label>
+    </div>
+    <p class="error-msg" id="err-gender">* กรุณาเลือกเพศ</p>
+  </div>
+
+  <div class="field" id="field-age">
+    <label><span class="num">2</span> อายุ (ปี)</label>
+    <input type="number" id="ageInput" placeholder="กรอกอายุเป็นตัวเลข เช่น 32" min="15" max="99" style="width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:var(--radius);font-family:'Sarabun',sans-serif;font-size:0.95rem;background:var(--bg);color:var(--text);transition:border-color 0.2s;" oninput="this.style.borderColor=''">
+    <p class="error-msg" id="err-age">* กรุณากรอกอายุ (15–99 ปี)</p>
+  </div>
+
+  <div class="field" id="field-site">
+    <label><span class="num">3</span> บริษัท / โรงงาน</label>
+    <select id="siteSelect" onchange="onSiteChange()" style="width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:var(--radius);font-family:'Sarabun',sans-serif;font-size:0.95rem;background:var(--bg);color:var(--text);transition:border-color 0.2s;appearance:none;background-image:url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22><path fill=%22%237a7470%22 d=%22M8 11L2 5h12z%22/></svg>');background-repeat:no-repeat;background-position:right 12px center;background-size:16px;">
+      <option value="">— กรุณาเลือกบริษัท / โรงงาน —</option>
+      <!-- แก้ไขรายชื่อสาขาได้ที่นี่ -->
+      <option value="SITE-AMT-001">อมตะนคร (ตัวอย่าง)</option>
+      <option value="SITE-OTHER">สาขาอื่น / ไม่อยู่ในรายการ</option>
+    </select>
+    <div class="code-display" id="siteCodeDisplay" style="display:none; margin-top:8px;">
+      <span class="code-label">รหัสบริษัท:</span>
+      <span id="siteCodeValue" style="font-weight:700; color:var(--accent);"></span>
+    </div>
+    <p class="note">🔒 ระบบบันทึกเฉพาะ "รหัสบริษัท" เพื่อเป็นการปกปิดตัวตนของบริษัท</p>
+    <p class="error-msg" id="err-site">* กรุณาเลือกบริษัท / โรงงาน</p>
+  </div>
+
+  <div class="field" id="field-emp">
+    <label><span class="num">4</span> รหัสพนักงาน</label>
+    <input type="text" id="empId" placeholder="กรอกรหัสพนักงาน" oninput="hashEmpId()">
+    <div class="code-display" id="hashDisplay" style="display:none;">
+      <span class="code-label">รหัสปิดบัง (ตัวอย่าง):</span>
+      <span id="hashValue"></span>···
+    </div>
+    <p class="note">🔒 รหัสพนักงานจริงจะถูกลบทันทีที่กรอก — ระบบรับเฉพาะ "รหัสปิดบัง" แทน ซึ่งไม่สามารถถอดรหัสกลับได้</p>
+    <p class="error-msg" id="err-emp">* กรุณากรอกรหัสพนักงาน</p>
+  </div>
+
+  <div class="field" id="field-stressor">
+    <label><span class="num">5</span> เรื่องที่ทำให้ท่านเครียด กังวล หรือไม่สบายใจในช่วง 1 เดือนที่ผ่านมา <span style="font-weight:400;">(เลือกได้มากกว่า 1 ข้อ)</span></label>
+    <div class="checkbox-group">
+      <label class="option-card"><input type="checkbox" name="stressor" value="ไม่มี" onchange="handleStressorNone(this)"> ไม่มี</label>
+      <label class="option-card"><input type="checkbox" name="stressor" value="โรคประจำตัว/การเจ็บป่วย" onchange="handleStressorOther(this)"> โรคประจำตัว การเจ็บป่วย</label>
+      <label class="option-card"><input type="checkbox" name="stressor" value="ความสัมพันธ์ในครอบครัว" onchange="handleStressorOther(this)"> ความสัมพันธ์ในครอบครัว</label>
+      <label class="option-card"><input type="checkbox" name="stressor" value="ครอบครัวมีผู้สูงอายุ/เด็กแรกเกิด" onchange="handleStressorOther(this)"> ครอบครัวมีผู้สูงอายุ / เด็กแรกเกิด</label>
+      <label class="option-card"><input type="checkbox" name="stressor" value="ครอบครัวมีผู้พิการ" onchange="handleStressorOther(this)"> ครอบครัวมีผู้พิการทางกาย / ทางจิต</label>
+      <label class="option-card"><input type="checkbox" name="stressor" value="ครอบครัวมีผู้ป่วยติดเตียง" onchange="handleStressorOther(this)"> ครอบครัวมีผู้ป่วยติดเตียง</label>
+      <label class="option-card"><input type="checkbox" name="stressor" value="ถูกยืมเงิน/โกง/แก๊งคอลเซนเตอร์" onchange="handleStressorOther(this)"> ถูกยืมเงิน ถูกโกง แก๊งคอลเซนเตอร์</label>
+      <label class="option-card"><input type="checkbox" name="stressor" value="ค่าใช้จ่าย/รายได้ลด/หนี้สิน" onchange="handleStressorOther(this)"> ค่าใช้จ่าย รายได้ลดลง ภาระหนี้สิน</label>
+      <label class="option-card"><input type="checkbox" name="stressor" value="สภาพแวดล้อมการทำงานไม่เหมาะสม" onchange="handleStressorOther(this)"> สภาพแวดล้อมและอุปกรณ์การทำงานไม่เหมาะสม</label>
+      <label class="option-card"><input type="checkbox" name="stressor" value="การออกแบบงาน/ลักษณะงาน" onchange="handleStressorOther(this)"> การออกแบบงาน / ลักษณะงานซ้ำๆ</label>
+      <label class="option-card"><input type="checkbox" name="stressor" value="ปริมาณงาน/ความกดดัน" onchange="handleStressorOther(this)"> ปริมาณงานมาก ความกดดันในงาน</label>
+      <label class="option-card"><input type="checkbox" name="stressor" value="ตารางงาน/กะงาน" onchange="handleStressorOther(this)"> ตารางงาน ทำงานเป็นกะ ชั่วโมงการทำงาน</label>
+      <label class="option-card"><input type="checkbox" name="stressor" value="วัฒนธรรมองค์กร/การสื่อสาร" onchange="handleStressorOther(this)"> วัฒนธรรมองค์กร การสื่อสาร การสนับสนุน</label>
+      <label class="option-card"><input type="checkbox" name="stressor" value="บทบาทหน้าที่คลุมเครือ" onchange="handleStressorOther(this)"> บทบาทและหน้าที่คลุมเครือหรือทับซ้อน</label>
+      <label class="option-card"><input type="checkbox" name="stressor" value="ความก้าวหน้าในอาชีพ" onchange="handleStressorOther(this)"> ความก้าวหน้าในอาชีพ</label>
+      <label class="option-card"><input type="checkbox" name="stressor" value="ขาดอิสระในการตัดสินใจ" onchange="handleStressorOther(this)"> ขาดอิสระในการตัดสินใจ / ควบคุมงาน</label>
+      <label class="option-card"><input type="checkbox" name="stressor" value="ความสัมพันธ์ในที่ทำงาน" onchange="handleStressorOther(this)"> ความสัมพันธ์กับหัวหน้า / เพื่อนร่วมงาน</label>
+      <label class="option-card"><input type="checkbox" name="stressor" value="ครอบครัวไม่สนับสนุนการทำงาน" onchange="handleStressorOther(this)"> ครอบครัวมีทัศนคติต่องานไม่ดี / ไม่สนับสนุน</label>
+      <label class="option-card"><input type="checkbox" name="stressor" value="เครียดกับอาชีพเสริม" onchange="handleStressorOther(this)"> เครียดหรือกังวลกับอาชีพเสริม</label>
+    </div>
+    <p class="error-msg" id="err-stressor">* กรุณาเลือกอย่างน้อย 1 รายการ (หากไม่มีให้เลือก "ไม่มี")</p>
+  </div>
+
+  <div class="field" id="field-treatment">
+    <label><span class="num">6</span> ในช่วง 1 ปีที่ผ่านมา ท่านได้รับการรักษาภาวะซึมเศร้าหรือโรคทางจิตเวชหรือไม่</label>
+    <div class="radio-group inline">
+      <label class="option-card"><input type="radio" name="prevTreatment" value="ใช่"> ใช่</label>
+      <label class="option-card"><input type="radio" name="prevTreatment" value="ไม่ใช่"> ไม่ใช่</label>
+    </div>
+    <p class="error-msg" id="err-treatment">* กรุณาตอบคำถามนี้</p>
+  </div>
+
+  <div class="btn-row">
+    <span class="step-indicator">ส่วนที่ 1 จาก 5</span>
+    <button class="btn btn-primary" onclick="validateSec1()">ถัดไป →</button>
+  </div>
+</div>
+
+<!-- SECTION 2: 2Q -->
+<div class="section" id="sec2">
+  <div class="section-label">ส่วนที่ 2 จาก 5</div>
+  <div class="section-title">แบบคัดกรองภาวะซึมเศร้า (2 คำถาม)</div>
+  <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:20px; line-height:1.6;">
+    ใน <strong>2 สัปดาห์ที่ผ่านมา</strong> รวมถึงวันนี้ ท่านมีอาการต่อไปนี้หรือไม่
+  </p>
+
+  <table class="q-table">
+    <thead>
+      <tr>
+        <th style="width:72%">คำถาม</th>
+        <th>ไม่มี</th>
+        <th>มี</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr id="row-q2_1">
+        <td>1. ท่านรู้สึกหดหู่ เศร้า หรือท้อแท้สิ้นหวังหรือไม่</td>
+        <td class="radio-col"><input type="radio" name="q2_1" value="0"></td>
+        <td class="radio-col"><input type="radio" name="q2_1" value="1"></td>
+      </tr>
+      <tr id="row-q2_2">
+        <td>2. ท่านรู้สึกเบื่อ ทำอะไรก็ไม่เพลิดเพลินหรือไม่</td>
+        <td class="radio-col"><input type="radio" name="q2_2" value="0"></td>
+        <td class="radio-col"><input type="radio" name="q2_2" value="1"></td>
+      </tr>
+    </tbody>
+  </table>
+  <p class="row-err-msg" id="err-2q">* กรุณาตอบคำถามให้ครบทุกข้อ (ข้อที่มีสีแดงยังไม่ได้ตอบ)</p>
+
+  <div class="btn-row">
+    <button class="btn btn-secondary" onclick="goTo(1)">← ย้อนกลับ</button>
+    <div style="display:flex; align-items:center; gap:16px;">
+      <span class="step-indicator">ส่วนที่ 2 จาก 5</span>
+      <button class="btn btn-primary" onclick="handle2Q()">ถัดไป →</button>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION 3: 9Q -->
+<div class="section" id="sec3">
+  <div class="section-label">ส่วนที่ 3 จาก 5</div>
+  <div class="section-title">แบบประเมินโรคซึมเศร้า (9 คำถาม)</div>
+  <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:20px; line-height:1.6;">
+    ใน <strong>2 สัปดาห์ที่ผ่านมา</strong> รวมถึงวันนี้ ท่านมีอาการเหล่านี้บ่อยแค่ไหน
+  </p>
+
+  <div style="overflow-x:auto;">
+  <table class="q-table">
+    <thead>
+      <tr>
+        <th style="min-width:200px;">อาการ</th>
+        <th style="min-width:58px;">ไม่มีเลย<br><small style="font-weight:400;">(0)</small></th>
+        <th style="min-width:78px;">เป็นบางวัน<br><small style="font-weight:400;">1–7 วัน (1)</small></th>
+        <th style="min-width:78px;">เป็นบ่อย<br><small style="font-weight:400;">&gt;7 วัน (2)</small></th>
+        <th style="min-width:66px;">เป็นทุกวัน<br><small style="font-weight:400;">(3)</small></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr id="row-q9_1"><td>1. เบื่อ ไม่สนใจอยากทำอะไร</td><td class="radio-col"><input type="radio" name="q9_1" value="0"></td><td class="radio-col"><input type="radio" name="q9_1" value="1"></td><td class="radio-col"><input type="radio" name="q9_1" value="2"></td><td class="radio-col"><input type="radio" name="q9_1" value="3"></td></tr>
+      <tr id="row-q9_2"><td>2. ไม่สบายใจ ซึมเศร้า ท้อแท้</td><td class="radio-col"><input type="radio" name="q9_2" value="0"></td><td class="radio-col"><input type="radio" name="q9_2" value="1"></td><td class="radio-col"><input type="radio" name="q9_2" value="2"></td><td class="radio-col"><input type="radio" name="q9_2" value="3"></td></tr>
+      <tr id="row-q9_3"><td>3. หลับยาก หรือหลับๆ ตื่นๆ หรือหลับมากเกินไป</td><td class="radio-col"><input type="radio" name="q9_3" value="0"></td><td class="radio-col"><input type="radio" name="q9_3" value="1"></td><td class="radio-col"><input type="radio" name="q9_3" value="2"></td><td class="radio-col"><input type="radio" name="q9_3" value="3"></td></tr>
+      <tr id="row-q9_4"><td>4. เหนื่อยง่าย หรือไม่ค่อยมีแรง</td><td class="radio-col"><input type="radio" name="q9_4" value="0"></td><td class="radio-col"><input type="radio" name="q9_4" value="1"></td><td class="radio-col"><input type="radio" name="q9_4" value="2"></td><td class="radio-col"><input type="radio" name="q9_4" value="3"></td></tr>
+      <tr id="row-q9_5"><td>5. เบื่ออาหาร หรือกินมากเกินไป</td><td class="radio-col"><input type="radio" name="q9_5" value="0"></td><td class="radio-col"><input type="radio" name="q9_5" value="1"></td><td class="radio-col"><input type="radio" name="q9_5" value="2"></td><td class="radio-col"><input type="radio" name="q9_5" value="3"></td></tr>
+      <tr id="row-q9_6"><td>6. รู้สึกไม่ดีกับตัวเอง คิดว่าตัวเองล้มเหลวหรือทำให้ครอบครัวผิดหวัง</td><td class="radio-col"><input type="radio" name="q9_6" value="0"></td><td class="radio-col"><input type="radio" name="q9_6" value="1"></td><td class="radio-col"><input type="radio" name="q9_6" value="2"></td><td class="radio-col"><input type="radio" name="q9_6" value="3"></td></tr>
+      <tr id="row-q9_7"><td>7. สมาธิไม่ดีเวลาทำอะไร เช่น ดูโทรทัศน์ ฟังวิทยุ หรืองานที่ต้องใช้ความตั้งใจ</td><td class="radio-col"><input type="radio" name="q9_7" value="0"></td><td class="radio-col"><input type="radio" name="q9_7" value="1"></td><td class="radio-col"><input type="radio" name="q9_7" value="2"></td><td class="radio-col"><input type="radio" name="q9_7" value="3"></td></tr>
+      <tr id="row-q9_8"><td>8. พูดช้า ทำอะไรช้าลงจนคนอื่นสังเกตเห็นได้ หรือกระสับกระส่าย อยู่นิ่งไม่ได้</td><td class="radio-col"><input type="radio" name="q9_8" value="0"></td><td class="radio-col"><input type="radio" name="q9_8" value="1"></td><td class="radio-col"><input type="radio" name="q9_8" value="2"></td><td class="radio-col"><input type="radio" name="q9_8" value="3"></td></tr>
+      <tr id="row-q9_9"><td>9. คิดทำร้ายตนเอง หรือคิดว่าถ้าตายไปคงจะดี</td><td class="radio-col"><input type="radio" name="q9_9" value="0"></td><td class="radio-col"><input type="radio" name="q9_9" value="1"></td><td class="radio-col"><input type="radio" name="q9_9" value="2"></td><td class="radio-col"><input type="radio" name="q9_9" value="3"></td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p class="row-err-msg" id="err-9q">* กรุณาตอบคำถามให้ครบทุกข้อ (ข้อที่มีสีแดงยังไม่ได้ตอบ)</p>
+
+  <div class="btn-row">
+    <button class="btn btn-secondary" onclick="goTo(2)">← ย้อนกลับ</button>
+    <div style="display:flex; align-items:center; gap:16px;">
+      <span class="step-indicator">ส่วนที่ 3 จาก 5</span>
+      <button class="btn btn-primary" onclick="handle9Q()">ถัดไป →</button>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION 4: ประเมินความเสี่ยง -->
+<div class="section" id="sec4">
+  <div class="section-label">ส่วนที่ 4 จาก 5</div>
+  <div class="section-title">แบบประเมินความเสี่ยงต่อการทำร้ายตนเอง</div>
+
+  <div class="info-box" style="background:#fde8e0; border-color:#c0392b;">
+    <strong style="color:#8b0000;">⚠️ ส่วนนี้มีคำถามที่อ่อนไหว</strong> — หากท่านรู้สึกไม่สบายใจ สามารถโทรสายด่วนสุขภาพจิต <strong>1323</strong> ได้ตลอด 24 ชั่วโมง
+  </div>
+
+  <table class="q-table" style="table-layout:fixed;width:100%;">
+    <thead>
+      <tr>
+        <th style="width:22%">ช่วงเวลา</th>
+        <th style="width:53%">คำถาม</th>
+        <th style="width:12.5%">ไม่มี</th>
+        <th style="width:12.5%">มี</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr id="row-sq1">
+        <td rowspan="7" style="vertical-align:middle; font-size:0.82rem; color:var(--text-muted); line-height:1.5; padding:12px;">ช่วง 1 เดือนที่ผ่านมา รวมวันนี้</td>
+        <td style="padding:12px;">1. คิดอยากตาย หรือคิดว่าตายไปจะดีกว่า</td>
+        <td class="radio-col" style="padding:12px;"><input type="radio" name="sq1" value="0"></td>
+        <td class="radio-col" style="padding:12px;"><input type="radio" name="sq1" value="1"></td>
+      </tr>
+      <tr id="row-sq2">
+        <td>2. อยากทำร้ายตัวเอง หรือทำให้ตัวเองบาดเจ็บ</td>
+        <td class="radio-col"><input type="radio" name="sq2" value="0"></td><td class="radio-col"><input type="radio" name="sq2" value="1"></td>
+      </tr>
+      <tr id="row-sq3">
+        <td>3. คิดเกี่ยวกับการฆ่าตัวตาย</td>
+        <td class="radio-col"><input type="radio" name="sq3" value="0" onchange="onSq3Change(0)"></td><td class="radio-col"><input type="radio" name="sq3" value="1" onchange="onSq3Change(1)"></td>
+      </tr>
+      <tr id="row-sq3_1" style="display:none;background:#fff8f0;">
+        <td style="padding:10px 14px;font-size:0.88rem;color:#555;line-height:1.6;border-left:3px solid #e09a2b;word-wrap:break-word;overflow-wrap:break-word;white-space:normal;">
+          <strong>3.1</strong> ท่านสามารถควบคุมความอยากฆ่าตัวตายที่ท่านคิดอยู่นั้นได้หรือไม่ หรือบอกได้ไหมว่าคงจะไม่ทำตามความคิดนั้นในขณะนี้
+        </td>
+        <td class="radio-col" style="text-align:center;vertical-align:middle;">
+          <div style="font-size:0.75rem;font-weight:700;color:#555;margin-bottom:4px;">ได้</div>
+          <input type="radio" name="sq3_1" value="ได้" style="accent-color:#2d6a4f;transform:scale(1.2);">
+        </td>
+        <td class="radio-col" style="text-align:center;vertical-align:middle;">
+          <div style="font-size:0.75rem;font-weight:700;color:#555;margin-bottom:4px;">ไม่ได้</div>
+          <input type="radio" name="sq3_1" value="ไม่ได้" style="accent-color:#c0392b;transform:scale(1.2);">
+        </td>
+      </tr>
+      <tr id="row-sq4">
+        <td>4. มีแผนการที่จะฆ่าตัวตาย</td>
+        <td class="radio-col"><input type="radio" name="sq4" value="0"></td><td class="radio-col"><input type="radio" name="sq4" value="1"></td>
+      </tr>
+      <tr id="row-sq5">
+        <td>5. เตรียมการที่จะทำร้ายตนเองหรือฆ่าตัวตาย โดยตั้งใจจะให้ตายจริงๆ</td>
+        <td class="radio-col"><input type="radio" name="sq5" value="0"></td><td class="radio-col"><input type="radio" name="sq5" value="1"></td>
+      </tr>
+      <tr id="row-sq6">
+        <td>6. ทำให้ตนเองบาดเจ็บ แต่ไม่ตั้งใจจะให้เสียชีวิต</td>
+        <td class="radio-col"><input type="radio" name="sq6" value="0"></td><td class="radio-col"><input type="radio" name="sq6" value="1"></td>
+      </tr>
+      <tr id="row-sq7">
+        <td>7. ได้พยายามฆ่าตัวตาย โดยคาดหวัง/ตั้งใจที่จะให้ตาย</td>
+        <td class="radio-col"><input type="radio" name="sq7" value="0"></td><td class="radio-col"><input type="radio" name="sq7" value="1"></td>
+      </tr>
+      <tr id="row-sq8">
+        <td style="font-size:0.82rem; color:var(--text-muted); padding:12px;">ตลอดชีวิตที่ผ่านมา</td>
+        <td style="padding:12px;">8. ท่านเคยพยายามฆ่าตัวตาย</td>
+        <td class="radio-col" style="padding:12px;"><input type="radio" name="sq8" value="0"></td>
+        <td class="radio-col" style="padding:12px;"><input type="radio" name="sq8" value="1"></td>
+      </tr>
+    </tbody>
+  </table>
+  <p class="row-err-msg" id="err-8q">* กรุณาตอบคำถามให้ครบทุกข้อ (ข้อที่มีสีแดงยังไม่ได้ตอบ)</p>
+
+  <div class="btn-row">
+    <button class="btn btn-secondary" onclick="goTo(3)">← ย้อนกลับ</button>
+    <div style="display:flex; align-items:center; gap:16px;">
+      <span class="step-indicator">ส่วนที่ 4 จาก 5</span>
+      <button class="btn btn-primary" onclick="validateSec4()">ถัดไป →</button>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION 5: ช่วยเหลือ + Pilot Feedback -->
+<div class="section" id="sec5">
+  <div class="section-label">ส่วนที่ 5 จาก 5</div>
+  <div class="section-title">การช่วยเหลือและข้อเสนอแนะ</div>
+
+  <div class="field" id="field-support">
+    <label style="font-size:1rem; color:var(--accent);">🤝 ท่านต้องการให้มีผู้ดูแลช่วยเหลือด้านสุขภาพจิตจากบริษัทหรือไม่</label>
+    <div class="radio-group">
+      <label class="option-card"><input type="radio" name="support" value="ต้องการ"> ต้องการให้ติดต่อกลับเพื่อให้ความช่วยเหลือ</label>
+      <label class="option-card"><input type="radio" name="support" value="ไม่ต้องการ"> ไม่ต้องการในขณะนี้</label>
+      <label class="option-card"><input type="radio" name="support" value="ไม่แน่ใจ"> ยังไม่แน่ใจ</label>
+    </div>
+    <p class="error-msg" id="err-support">* กรุณาเลือกตัวเลือกนี้</p>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-secondary" onclick="goTo(4)">← ย้อนกลับ</button>
+    <div style="display:flex; align-items:center; gap:16px;">
+      <span class="step-indicator">ส่วนที่ 5 จาก 5</span>
+      <button class="btn btn-danger" onclick="validateSec5()">ส่งแบบสอบถาม ✓</button>
+    </div>
+  </div>
+</div>
+
+<!-- RESULTS -->
+<div class="section" id="secResult">
+  <div class="section-label">ผลการประเมิน</div>
+  <div class="section-title">ผลการคัดกรองภาวะซึมเศร้า</div>
+  <div id="resultContent"></div>
+</div>
+
+
+</div><!-- /container -->
+
+<!-- POPUP: 8Q ข้อ 3.1 -->
+<div id="popup-sq3" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9000;align-items:center;justify-content:center;padding:20px;">
+  <div style="background:white;border-radius:14px;padding:28px 28px 24px;max-width:480px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+    <div style="background:#fde8e0;border:1px solid #c0392b;border-radius:8px;padding:12px 14px;margin-bottom:18px;font-size:0.85rem;color:#8b0000;font-weight:600;">⚠️ คำถามเพิ่มเติม — ข้อ 3.1</div>
+    <p style="font-size:1rem;font-weight:600;line-height:1.65;color:#1a1714;margin-bottom:20px;">ท่านสามารถควบคุมความอยากฆ่าตัวตายที่ท่านคิดอยู่นั้นได้หรือไม่ หรือบอกได้ไหมว่าคงจะไม่ทำตามความคิดนั้นในขณะนี้</p>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <label style="display:flex;align-items:center;gap:10px;padding:12px 14px;border:1.5px solid #d8d3cb;border-radius:8px;cursor:pointer;background:#f5f3ef;font-size:0.95rem;" onclick="selectSq31('ได้')">
+        <input type="radio" name="sq3_1" value="ได้" style="accent-color:#2d6a4f;transform:scale(1.2);"> ได้ — สามารถควบคุมได้ / คงจะไม่ทำ
+      </label>
+      <label style="display:flex;align-items:center;gap:10px;padding:12px 14px;border:1.5px solid #d8d3cb;border-radius:8px;cursor:pointer;background:#f5f3ef;font-size:0.95rem;" onclick="selectSq31('ไม่ได้')">
+        <input type="radio" name="sq3_1" value="ไม่ได้" style="accent-color:#c0392b;transform:scale(1.2);"> ไม่ได้ — ควบคุมไม่ได้
+      </label>
+    </div>
+    <button onclick="closeSq3Popup()" style="margin-top:18px;width:100%;padding:11px;background:#2d6a4f;color:white;border:none;border-radius:8px;font-family:'Sarabun',sans-serif;font-size:1rem;font-weight:600;cursor:pointer;">ยืนยัน →</button>
+  </div>
+</div>
+
+<!-- POPUP: เบอร์โทรติดต่อกลับ -->
+<div id="popup-contact" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9000;align-items:center;justify-content:center;padding:20px;">
+  <div style="background:white;border-radius:14px;padding:28px 28px 24px;max-width:440px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+    <p style="font-size:1.1rem;font-weight:700;color:#2d6a4f;margin-bottom:6px;">🤝 ระบุเบอร์โทรติดต่อกลับ</p>
+    <p style="font-size:0.88rem;color:#7a7470;margin-bottom:18px;line-height:1.6;">กรุณากรอกเบอร์โทรศัพท์ที่สะดวกให้ติดต่อกลับเพื่อรับการช่วยเหลือด้านสุขภาพจิต</p>
+    <input type="tel" id="contactPhone" placeholder="เช่น 081-234-5678" style="width:100%;padding:11px 14px;border:1.5px solid #d8d3cb;border-radius:8px;font-family:'Sarabun',sans-serif;font-size:1rem;margin-bottom:6px;">
+    <p style="font-size:0.78rem;color:#7a7470;margin-bottom:16px;">🔒 เบอร์โทรนี้จะถูกส่งไปยังผู้ดูแลโดยตรง และใช้เพื่อการช่วยเหลือเท่านั้น</p>
+    <div style="display:flex;gap:10px;">
+      <button onclick="skipContactPhone()" style="flex:1;padding:11px;background:transparent;color:#7a7470;border:1.5px solid #d8d3cb;border-radius:8px;font-family:'Sarabun',sans-serif;font-size:0.95rem;font-weight:600;cursor:pointer;">ข้ามขั้นตอนนี้</button>
+      <button onclick="saveContactPhone()" style="flex:2;padding:11px;background:#2d6a4f;color:white;border:none;border-radius:8px;font-family:'Sarabun',sans-serif;font-size:0.95rem;font-weight:600;cursor:pointer;">ยืนยันเบอร์โทร ✓</button>
+    </div>
+  </div>
+</div>
+<script>
+// ── SheetJS for Excel export ───────────────────────────────────
+const sheetScript = document.createElement('script');
+sheetScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+document.head.appendChild(sheetScript);
+// ── รหัสปิดบัง (SHA-256) ───────────────────────────────────────
+async function sha256(msg) {
+  const buf = new TextEncoder().encode(msg);
+  const hash = await crypto.subtle.digest('SHA-256', buf);
+  return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+let empHash = '', siteCode = '';
+
+async function hashEmpId() {
+  const val = document.getElementById('empId').value.trim();
+  if (!val) { document.getElementById('hashDisplay').style.display = 'none'; empHash = ''; return; }
+  // รวม siteCode + empId เพื่อให้รหัสพนักงานซ้ำกันข้ามบริษัทไม่ชนกัน
+  const combined = (siteCode || 'NOSITE') + '|' + val;
+  empHash = await sha256(combined);
+  document.getElementById('hashValue').textContent = empHash.substring(0, 5);
+  document.getElementById('hashDisplay').style.display = 'flex';
+}
+
+function onSiteChange() {
+  const sel = document.getElementById('siteSelect');
+  siteCode = sel.value;
+  if (!siteCode) { document.getElementById('siteCodeDisplay').style.display = 'none'; return; }
+  const masked = siteCode.replace(/\d+$/, 'xxx');
+  document.getElementById('siteCodeValue').textContent = masked;
+  document.getElementById('siteCodeDisplay').style.display = 'flex';
+  // Re-hash employee ID ถ้ากรอกไว้แล้ว เพื่อให้รหัสปิดบังใช้ siteCode ใหม่
+  hashEmpId();
+}
+// ── Validation helpers ─────────────────────────────────────────
+function showErr(id, show) {
+  const el = document.getElementById(id);
+  if (el) el.classList.toggle('show', show);
+}
+function clearErrors() {
+  document.querySelectorAll('.error-msg').forEach(e => e.classList.remove('show'));
+  document.querySelectorAll('.field').forEach(f => f.classList.remove('has-error'));
+}
+function markError(fieldId, errId) {
+  document.getElementById(fieldId)?.classList.add('has-error');
+  showErr(errId, true);
+}
+
+function validateSec1() {
+  clearErrors();
+  let ok = true;
+  if (!document.querySelector('input[name="gender"]:checked'))
+    { markError('field-gender','err-gender'); ok = false; }
+  const ageVal = parseInt(document.getElementById('ageInput').value);
+  if (!ageVal || ageVal < 15 || ageVal > 99) {
+    document.getElementById('field-age').classList.add('has-error');
+    document.getElementById('ageInput').style.borderColor = '#c0392b';
+    showErr('err-age', true); ok = false;
+  }
+  if (!document.getElementById('siteSelect').value)
+    { markError('field-site','err-site'); ok = false; }
+  if (!document.getElementById('empId').value.trim())
+    { markError('field-emp','err-emp'); ok = false; }
+  if (!document.querySelector('input[name="stressor"]:checked'))
+    { markError('field-stressor','err-stressor'); ok = false; }
+  if (!document.querySelector('input[name="prevTreatment"]:checked'))
+    { markError('field-treatment','err-treatment'); ok = false; }
+  if (!ok) {
+    document.querySelector('.field.has-error')?.scrollIntoView({ behavior:'smooth', block:'center' });
+    return;
+  }
+  goTo(2);
+}
+
+// ── Navigation ─────────────────────────────────────────────────
+let currentSection = 1;
+
+function goTo(n) {
+  const cur = (currentSection === 'Result') ? document.getElementById('secResult') : document.getElementById('sec' + currentSection);
+  if (cur) cur.classList.remove('active');
+  currentSection = n;
+  const next = (n === 'Result') ? document.getElementById('secResult') : document.getElementById('sec' + n);
+  next.classList.add('active');
+  next.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const pct = (n === 'Result') ? 100 : Math.round((n / 5) * 100);
+  document.getElementById('progressFill').style.width = pct + '%';
+}
+
+function goToResult() { goTo('Result'); }
+
+// ── ล้าง error highlights ──────────────────────────────────────
+function clearTableErrors(prefix, count) {
+  for (let i = 1; i <= count; i++) {
+    const row = document.getElementById('row-' + prefix + i);
+    if (row) row.classList.remove('row-error');
+  }
+}
+
+// ── 2Q: ไม่มีอาการทั้ง 2 ข้อ → สิ้นสุด ────────────────────────
+function handle2Q() {
+  clearTableErrors('q2_', 2);
+  document.getElementById('err-2q').classList.remove('show');
+  let missing = false;
+  if (!document.querySelector('input[name="q2_1"]:checked')) {
+    document.getElementById('row-q2_1').classList.add('row-error'); missing = true;
+  }
+  if (!document.querySelector('input[name="q2_2"]:checked')) {
+    document.getElementById('row-q2_2').classList.add('row-error'); missing = true;
+  }
+  if (missing) {
+    document.getElementById('err-2q').classList.add('show');
+    return;
+  }
+  const q1 = document.querySelector('input[name="q2_1"]:checked');
+  const q2 = document.querySelector('input[name="q2_2"]:checked');
+  if (parseInt(q1.value) + parseInt(q2.value) === 0) {
+    showResult('none', 0, 0);
+  } else {
+    goTo(3);
+  }
+}
+
+// ── 9Q: คะแนน < 7 → สิ้นสุด, ≥ 7 → ทำแบบประเมินความเสี่ยง ──
+function handle9Q() {
+  for (let i = 1; i <= 9; i++) {
+    const row = document.getElementById('row-q9_' + i);
+    if (row) row.classList.remove('row-error');
+  }
+  document.getElementById('err-9q').classList.remove('show');
+  let total = 0, q1v = 0, q2v = 0, missing = false;
+  for (let i = 1; i <= 9; i++) {
+    const a = document.querySelector('input[name="q9_' + i + '"]:checked');
+    if (!a) {
+      document.getElementById('row-q9_' + i).classList.add('row-error');
+      missing = true;
+    } else {
+      const v = parseInt(a.value);
+      total += v;
+      if (i === 1) q1v = v;
+      if (i === 2) q2v = v;
+    }
+  }
+  if (missing) {
+    document.getElementById('err-9q').classList.add('show');
+    document.querySelector('.row-error')?.scrollIntoView({ behavior:'smooth', block:'center' });
+    return;
+  }
+  if (total >= 7 && (q1v >= 2 || q2v >= 2)) {
+    goTo(4);
+  } else {
+    const level = total < 7 ? 'minimal' : (total < 13 ? 'mild' : (total < 19 ? 'moderate' : 'severe'));
+    showResult(level, total, 0);
+  }
+}
+
+// ── 8Q validation ──────────────────────────────────────────────
+function validateSec4() {
+  for (let i = 1; i <= 8; i++) {
+    const row = document.getElementById('row-sq' + i);
+    if (row) row.classList.remove('row-error');
+  }
+  document.getElementById('err-8q').classList.remove('show');
+  let missing = false;
+  for (let i = 1; i <= 8; i++) {
+    if (!document.querySelector('input[name="sq' + i + '"]:checked')) {
+      document.getElementById('row-sq' + i).classList.add('row-error');
+      missing = true;
+    }
+  }
+  if (missing) {
+    document.getElementById('err-8q').classList.add('show');
+    document.querySelector('#sec4 .row-error')?.scrollIntoView({ behavior:'smooth', block:'center' });
+    return;
+  }
+  goTo(5);
+}
+
+// ── ส่วนที่ 5 ── (handled by validateSec5 above)
+function submitForm() {
+  const support = document.querySelector('input[name="support"]:checked');
+  if (!support) { alert('กรุณาเลือกตัวเลือกด้านการช่วยเหลือก่อนส่ง'); return; }
+
+  let q9score = 0;
+  for (let i = 1; i <= 9; i++) {
+    const a = document.querySelector('input[name="q9_' + i + '"]:checked');
+    if (a) q9score += parseInt(a.value);
+  }
+  const sq8score = calc8QScore();
+  const didDo8Q = document.querySelector('input[name="sq1"]:checked') !== null;
+  let crisis = didDo8Q && sq8score > 0;
+  const q2s = (parseInt((document.querySelector('input[name="q2_1"]:checked') || {value:0}).value) +
+               parseInt((document.querySelector('input[name="q2_2"]:checked') || {value:0}).value));
+
+  let level = 'none';
+  if (q2s === 0) level = 'none';
+  else if (crisis) {
+    if (sq8score >= 17) level = 'crisis_severe';
+    else if (sq8score >= 9) level = 'crisis_moderate';
+    else level = 'crisis_mild';
+  }
+  else if (q9score < 7) level = 'minimal';
+  else if (q9score < 13) level = 'mild';
+  else if (q9score < 19) level = 'moderate';
+  else level = 'severe';
+
+  showResult(level, q9score, sq8score);
+}
+
+// ── Show Result ────────────────────────────────────────────────
+const HOSP_HTML = `
+<div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:20px;margin-bottom:14px;">
+  <p style="font-weight:700;margin-bottom:12px;font-size:0.93rem;">🏥 โรงพยาบาลที่รับขึ้นทะเบียนสิทธิประกันสังคม (ไม่มีค่าใช้จ่าย)</p>
+  <ul class="hospital-list">
+    <li>โรงพยาบาลชลบุรี <span class="tel">📞 038-931-000 ต่อ 1600</span></li>
+    <li>โรงพยาบาลสมเด็จบรมราชเทวี ณ ศรีราชา <span class="tel">📞 038-320-000</span></li>
+    <li>โรงพยาบาลมหาวิทยาลัยบูรพา <span class="tel">📞 038-102-581-3 ต่อ คลินิกจิตเวช</span></li>
+    <li>โรงพยาบาลเอกชลอ่างศิลา <span class="tel">📞 038-939-888</span></li>
+    <li>โรงพยาบาลวิภาราม อมตะนคร <span class="tel">📞 033-265-599</span></li>
+    <li>โรงพยาบาลวิภาราม แหลมฉบัง <span class="tel">📞 033-009-800</span></li>
+  </ul>
+</div>
+<div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:20px;margin-bottom:14px;">
+  <p style="font-weight:700;margin-bottom:12px;font-size:0.93rem;">🏥 สถานพยาบาลเอกชน (มีค่าใช้จ่าย)</p>
+  <ul class="hospital-list">
+    <li>โรงพยาบาลสมิติเวช ชลบุรี <span class="tel">📞 033-038-888 ต่อ 988</span></li>
+    <li>โรงพยาบาลสมิติเวช ศรีราชา <span class="tel">📞 038-320-300 ต่อ 4183, 4184</span></li>
+    <li>คลินิกแพทย์ทรงสิทธิ์ <span class="tel">📞 063-990-8039</span></li>
+    <li>คลินิกหมอวัลลดา-หมอทรงศักดิ์ <span class="tel">📞 038-275-971</span></li>
+    <li>คลินิกแพทย์ธรรมิกา <span class="tel">📞 087-992-6993</span></li>
+    <li>เอยูคลินิกเวชกรรม <span class="tel">📞 082-141-4498</span></li>
+  </ul>
+</div>
+<div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:14px;">
+  <p style="font-weight:700;margin-bottom:10px;font-size:0.93rem;">🗺️ ค้นหาสถานพยาบาลใกล้เคียง</p>
+  <a href="https://www.google.com/maps/search/โรงพยาบาลจิตเวช+ชลบุรี" target="_blank" style="display:inline-flex;align-items:center;gap:8px;background:#2d6a4f;color:white;padding:10px 18px;border-radius:8px;text-decoration:none;font-size:0.92rem;font-weight:600;">📍 เปิด Google Maps — สถานพยาบาลจิตเวชใกล้ฉัน</a>
+  <p style="font-size:0.78rem;color:var(--text-muted);margin-top:8px;">กดปุ่มด้านบนเพื่อค้นหาสถานพยาบาลในพื้นที่ของท่าน</p>
+</div>`;
+
+function showResult(level, score, sq8score) {
+  sq8score = sq8score || 0;
+  const crisisAdvice = '📞 สายด่วนสุขภาพจิต <strong>1323</strong> (24 ชั่วโมง)<br>📞 กรมสุขภาพจิต <strong>1667</strong><br>หรือไปห้องฉุกเฉินโรงพยาบาลที่ใกล้ที่สุดทันที';
+  const map = {
+    none:           { cls:'low',      icon:'✅', title:'ไม่มีอาการซึมเศร้า หรือมีอาการน้อยมาก',
+                      body:'ท่านไม่จำเป็นต้องรักษาในขณะนี้ แต่ควรดูแลสุขภาพจิตอย่างต่อเนื่อง',
+                      advice:'พักผ่อนให้เพียงพอ นอนหลับ 6–8 ชั่วโมง ออกกำลังกายสม่ำเสมอ ทำกิจกรรมผ่อนคลาย พบปะเพื่อนฝูง' },
+    minimal:        { cls:'low',      icon:'🟡', title:'มีอาการซึมเศร้าระดับน้อย (9Q: ' + score + ' คะแนน)',
+                      body:'ยังไม่ถึงเกณฑ์ที่ต้องรักษา แต่ควรดูแลตัวเองและสังเกตอาการต่อเนื่อง',
+                      advice:'หากอาการไม่ดีขึ้นภายใน 2–4 สัปดาห์ ควรพบบุคลากรสาธารณสุขเพื่อประเมินเพิ่มเติม' },
+    mild:           { cls:'moderate', icon:'🟠', title:'มีอาการซึมเศร้าระดับปานกลาง (9Q: ' + score + ' คะแนน)',
+                      body:'แนะนำให้พบบุคลากรสาธารณสุขเพื่อรับการประเมินและรักษา',
+                      advice:'กรุณานัดหมายแพทย์หรือนักจิตวิทยาโดยเร็ว ดูรายชื่อสถานพยาบาลด้านล่าง' },
+    moderate:       { cls:'moderate', icon:'🟠', title:'มีอาการซึมเศร้าระดับค่อนข้างรุนแรง (9Q: ' + score + ' คะแนน)',
+                      body:'ควรพบแพทย์โดยเร็วที่สุด อย่าปล่อยทิ้งไว้',
+                      advice:'กรุณาติดต่อสถานพยาบาลด้านล่าง หรือโทรสายด่วนสุขภาพจิต <strong>1323</strong>' },
+    severe:         { cls:'high',     icon:'🔴', title:'มีอาการซึมเศร้าระดับรุนแรง (9Q: ' + score + ' คะแนน)',
+                      body:'ต้องการการรักษาโดยด่วน กรุณาอย่ารอช้า',
+                      advice:'📞 สายด่วนสุขภาพจิต <strong>1323</strong> (24 ชั่วโมง) หรือไปห้องฉุกเฉินโรงพยาบาลที่ใกล้ที่สุด' },
+    crisis_mild:    { cls:'high',     icon:'🚨', title:'พบความเสี่ยงต่อการทำร้ายตนเอง — ระดับน้อย (8Q: ' + sq8score + ' คะแนน)',
+                      body:'กรุณาติดต่อขอความช่วยเหลือทันที', advice: crisisAdvice },
+    crisis_moderate:{ cls:'high',     icon:'🚨', title:'พบความเสี่ยงต่อการทำร้ายตนเอง — ระดับปานกลาง (8Q: ' + sq8score + ' คะแนน)',
+                      body:'กรุณาติดต่อขอความช่วยเหลือทันที', advice: crisisAdvice },
+    crisis_severe:  { cls:'high',     icon:'🚨', title:'พบความเสี่ยงต่อการทำร้ายตนเอง — ระดับรุนแรง (8Q: ' + sq8score + ' คะแนน)',
+                      body:'กรุณาติดต่อขอความช่วยเหลือทันที ท่านไม่ต้องเผชิญสิ่งนี้คนเดียว', advice: crisisAdvice },
+    // fallback legacy key
+    crisis:         { cls:'high',     icon:'🚨', title:'พบความเสี่ยงต่อการทำร้ายตนเอง',
+                      body:'กรุณาติดต่อขอความช่วยเหลือทันที', advice: crisisAdvice },
+  };
+
+  const r = map[level] || map['none'];
+  const isCrisis = level.startsWith('crisis');
+
+  const q9Box = '';
+
+  // ── helpers (ต้อง declare ก่อน no8QCard) ─────────────────
+  const q9LevelLabel = score < 7 ? 'น้อย' : score < 13 ? 'ปานกลาง' : score < 19 ? 'ค่อนข้างรุนแรง' : 'รุนแรง';
+  const q9BarPct     = Math.round((score / 27) * 100);
+  const q9BarColor   = score < 7 ? '#52b788' : score < 13 ? '#d4a017' : score < 19 ? '#e76f51' : '#e63946';
+
+  const sq8LevelLabel = sq8score === 0 ? 'ไม่มี' : sq8score <= 8 ? 'น้อย' : sq8score <= 16 ? 'ปานกลาง' : 'รุนแรง';
+  const sq8BarPct     = Math.min(100, Math.round((sq8score / 52) * 100));
+  const sq8BarColor   = sq8score === 0 ? '#52b788' : sq8score <= 8 ? '#d4a017' : sq8score <= 16 ? '#e76f51' : '#e63946';
+
+  function makeBar(label, val, max, pct, color, levelLabel) {
+    return `<div style="margin-top:14px;padding-top:12px;border-top:1px solid rgba(0,0,0,0.08);">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;">
+        <span style="font-size:0.78rem;font-weight:600;opacity:0.75;">${label}</span>
+        <span style="font-size:1.1rem;font-weight:800;color:${color};">${val} <span style="font-size:0.72rem;font-weight:500;opacity:0.6;">/ ${max}</span></span>
+      </div>
+      <div style="background:rgba(0,0,0,0.1);border-radius:99px;height:8px;overflow:hidden;">
+        <div style="width:${pct}%;height:100%;background:${color};border-radius:99px;"></div>
+      </div>
+      <div style="font-size:0.74rem;opacity:0.65;margin-top:5px;">ระดับ: ${levelLabel}</div>
+    </div>`;
+  }
+
+  const didDo8Q_result = document.querySelector('input[name="sq1"]:checked') !== null;
+  const q9Bar  = level !== 'none' ? makeBar('9Q คะแนนรวม', score, 27, q9BarPct, q9BarColor, q9LevelLabel) : '';
+  const sq8Bar = didDo8Q_result   ? makeBar('8Q คะแนนรวม', sq8score, 52, sq8BarPct, sq8BarColor, sq8LevelLabel) : '';
+
+  // กล่อง 8Q=0 แยกออกมา เมื่อทำ 8Q แล้วได้ 0 คะแนน
+  const didDo8Q_check = didDo8Q_result;
+  const no8QRisk = didDo8Q_check && sq8score === 0 && !isCrisis && level !== 'none';
+  const no8QCard = no8QRisk ? `
+    <div class="result-card low" style="margin-top:10px;">
+      <h3>✅ ผลประเมิน 8Q: ไม่พบความเสี่ยงต่อการทำร้ายตนเอง (8Q: 0 คะแนน)</h3>
+      <p>ท่านไม่มีแนวโน้มในการทำร้ายตนเองในขณะนี้</p>
+      ${sq8Bar}
+    </div>` : '';
+
+  // กรอบภาวะซึมเศร้า (crisis เท่านั้น) — มี 9Q bar ข้างใน
+  const depressionLevelLabel = score < 7 ? 'น้อย' : score < 13 ? 'ปานกลาง' : score < 19 ? 'ค่อนข้างรุนแรง' : 'รุนแรง';
+  const depressionCard = isCrisis ? `
+    <div class="result-card moderate" style="margin-bottom:10px;">
+      <h3>🟠 มีภาวะซึมเศร้าระดับ${depressionLevelLabel} (9Q: ${score} คะแนน)</h3>
+      <p>นอกจากนี้ยังพบความเสี่ยงต่อการทำร้ายตนเอง กรุณาติดต่อขอความช่วยเหลือทันที</p>
+      ${q9Bar}
+    </div>` : '';
+
+  // progress bar ใน result card หลัก
+  const progressBar = level === 'none' ? '' : isCrisis ? sq8Bar : q9Bar;
+
+  document.getElementById('resultContent').innerHTML =
+    depressionCard +
+    '<div class="result-card ' + r.cls + '">' +
+      '<h3>' + r.icon + ' ' + r.title + '</h3>' +
+      '<p>' + r.body + '</p>' +
+      progressBar +
+    '</div>' +
+    no8QCard +
+    '<div class="info-box"><strong>ข้อแนะนำในการดูแลตนเอง:</strong><br>' + r.advice + '</div>' +
+    HOSP_HTML +
+    '<button class="btn btn-secondary" onclick="window.print()" style="margin-top:12px;width:100%;">🖨️ พิมพ์ผลการประเมิน</button>' +
+
+    // ── Pilot feedback ──────────────────────────────────────
+    '<hr style="border:none;border-top:2px dashed #b0c0e8;margin:32px 0 24px;">' +
+    '<div style="margin-bottom:16px;">' +
+      '<p style="font-size:0.88rem;color:#2a4a9c;font-weight:700;margin-bottom:4px;">🧪 ข้อเสนอแนะสำหรับการทดลองใช้งาน (Pilot Study)</p>' +
+      '<p style="font-size:0.82rem;color:#5a6a9c;line-height:1.6;">ความคิดเห็นของท่านจะช่วยปรับปรุงแบบสอบถามนี้ก่อนนำไปใช้จริงในวงกว้าง</p>' +
+    '</div>' +
+    '<div class="pilot-box">' +
+      '<h4>📋 ความคิดเห็นต่อแบบสอบถาม</h4>' +
+      '<div class="pilot-field">' +
+        '<label>1. ภาษาที่ใช้ในแบบสอบถามเข้าใจง่ายเพียงใด</label>' +
+        '<div class="pilot-rating">' +
+          '<label class="star-opt"><input type="radio" name="pilot_lang" value="1"> 1 — ยากมาก</label>' +
+          '<label class="star-opt"><input type="radio" name="pilot_lang" value="2"> 2 — ยาก</label>' +
+          '<label class="star-opt"><input type="radio" name="pilot_lang" value="3"> 3 — พอใช้</label>' +
+          '<label class="star-opt"><input type="radio" name="pilot_lang" value="4"> 4 — เข้าใจได้</label>' +
+          '<label class="star-opt"><input type="radio" name="pilot_lang" value="5"> 5 — เข้าใจง่ายมาก</label>' +
+        '</div>' +
+      '</div>' +
+      '<div class="pilot-field">' +
+        '<label>2. ระยะเวลาในการตอบแบบสอบถามเหมาะสมหรือไม่</label>' +
+        '<div class="pilot-rating">' +
+          '<label class="star-opt"><input type="radio" name="pilot_time" value="นานเกินไป"> ⏱ นานเกินไป</label>' +
+          '<label class="star-opt"><input type="radio" name="pilot_time" value="เหมาะสม"> ✅ เหมาะสมดี</label>' +
+          '<label class="star-opt"><input type="radio" name="pilot_time" value="สั้นเกินไป"> ⚡ สั้นเกินไป</label>' +
+        '</div>' +
+      '</div>' +
+      '<div class="pilot-field">' +
+        '<label>3. ท่านรู้สึกอย่างไรกับการปกป้องข้อมูล (รหัสปิดบัง)</label>' +
+        '<div class="pilot-rating">' +
+          '<label class="star-opt"><input type="radio" name="pilot_privacy" value="มั่นใจมาก"> 😊 มั่นใจมาก</label>' +
+          '<label class="star-opt"><input type="radio" name="pilot_privacy" value="พอใช้"> 😐 พอใช้</label>' +
+          '<label class="star-opt"><input type="radio" name="pilot_privacy" value="ยังไม่มั่นใจ"> 😟 ยังไม่มั่นใจ</label>' +
+          '<label class="star-opt"><input type="radio" name="pilot_privacy" value="ไม่เข้าใจวิธีการ"> ❓ ไม่เข้าใจวิธีการ</label>' +
+        '</div>' +
+      '</div>' +
+      '<div class="pilot-field">' +
+        '<label>4. คำถามข้อใดที่รู้สึกว่าไม่เหมาะสม ไม่ชัดเจน หรืออยากให้แก้ไข</label>' +
+        '<textarea name="pilot_unclear" placeholder="เช่น คำถามข้อ 8 ในส่วนที่ 3 ไม่ชัดเจน..."></textarea>' +
+      '</div>' +
+      '<div class="pilot-field">' +
+        '<label>5. มีคำถามหรือหัวข้อที่คิดว่าควรเพิ่มเติมในแบบสอบถามนี้หรือไม่</label>' +
+        '<textarea name="pilot_add" placeholder="เช่น อยากให้มีคำถามเรื่องการสนับสนุนจากเพื่อนร่วมงาน..."></textarea>' +
+      '</div>' +
+      '<div class="pilot-field" style="margin-bottom:0;">' +
+        '<label>6. ข้อเสนอแนะอื่นๆ เพื่อปรับปรุงแบบสอบถามนี้</label>' +
+        '<textarea name="pilot_other" placeholder="เช่น ควรเพิ่มตัวเลือก ไม่แน่ใจ ในบางข้อ..."></textarea>' +
+      '</div>' +
+    '</div>' +
+    '<button class="btn btn-primary" onclick="submitPilot()" style="width:100%;margin-top:4px;">ส่งข้อเสนอแนะ →</button>' +
+    '<div id="pilotThanks" style="display:none;margin-top:14px;background:var(--accent-light);border:1.5px solid var(--accent);border-radius:8px;padding:14px 18px;font-size:0.92rem;color:var(--accent);font-weight:600;text-align:center;">✅ ขอบคุณสำหรับข้อเสนอแนะ ความคิดเห็นของท่านมีคุณค่ามาก</div>';
+
+  saveResponse(level, score, sq8score);
+  goToResult();
+}
+
+// ── Submit pilot feedback ──────────────────────────────────────
+function submitPilot() {
+  const pilotPayload = {
+    timestamp:     new Date().toLocaleString('th-TH'),
+    id:            'PIL-' + Date.now(),
+    siteCode:      siteCode || '-',
+    pilot_lang:    document.querySelector('input[name="pilot_lang"]:checked')?.value || '',
+    pilot_time:    document.querySelector('input[name="pilot_time"]:checked')?.value || '',
+    pilot_privacy: document.querySelector('input[name="pilot_privacy"]:checked')?.value || '',
+    pilot_unclear: document.querySelector('textarea[name="pilot_unclear"]')?.value || '',
+    pilot_add:     document.querySelector('textarea[name="pilot_add"]')?.value || '',
+    pilot_other:   document.querySelector('textarea[name="pilot_other"]')?.value || '',
+  };
+  sendToSheet(pilotPayload);  // ส่งไป sheet PilotFeedback
+
+  document.getElementById('pilotThanks').style.display = 'block';
+  document.querySelector('button[onclick="submitPilot()"]').style.display = 'none';
+  document.getElementById('pilotThanks').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+// ══════════════════════════════════════════════════════════════
+// ADMIN SYSTEM
+// ══════════════════════════════════════════════════════════════
+
+// ── แก้ Password ได้ที่นี่ ──────────────────────────────────────
+const ADMIN_PASSWORD = 'amata2025';
+
+// ── Google Apps Script URL ─────────────────────────────────────
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyjufWiuqdw11pDHDUXy2ZG2olgozToZUXg7aCPDHxs-KsSR7nn0I9geyJ-RwVsvSUk/exec';
+
+// ── ส่งข้อมูลไป Google Sheets ─────────────────────────────────
+async function sendToSheet(payload) {
+  if (!APPS_SCRIPT_URL) return;
+  try {
+    await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      mode: 'no-cors',  // จำเป็นสำหรับ Apps Script
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+  } catch(err) {
+    console.warn('sendToSheet failed:', err);
+    // ไม่ขัดขวางการแสดงผล
+  }
+}
+
+// ── Level labels ───────────────────────────────────────────────
+const LEVEL_LABEL = {
+  none:     { th:'ไม่มีอาการ',          color:'#52b788' },
+  minimal:  { th:'น้อย',                color:'#d4a017' },
+  mild:     { th:'ปานกลาง',             color:'#f4845f' },
+  moderate: { th:'ค่อนข้างรุนแรง',      color:'#e76f51' },
+  severe:   { th:'รุนแรง',              color:'#e63946' },
+  crisis:   { th:'⚠️ วิกฤต',           color:'#ff4444' },
+};
+
+// ── Save one response to localStorage ──────────────────────────
+function saveResponse(level, q9score, sq8score) {
+  // stressors แยกเป็น binary 0/1 แต่ละรายการ
+  const STRESSOR_KEYS = [
+    'ไม่มี',
+    'โรคประจำตัว/การเจ็บป่วย',
+    'ความสัมพันธ์ในครอบครัว',
+    'ครอบครัวมีผู้สูงอายุ/เด็กแรกเกิด',
+    'ครอบครัวมีผู้พิการ',
+    'ครอบครัวมีผู้ป่วยติดเตียง',
+    'ถูกยืมเงิน/โกง/แก๊งคอลเซนเตอร์',
+    'ค่าใช้จ่าย/รายได้ลด/หนี้สิน',
+    'สภาพแวดล้อมการทำงานไม่เหมาะสม',
+    'การออกแบบงาน/ลักษณะงาน',
+    'ปริมาณงาน/ความกดดัน',
+    'ตารางงาน/กะงาน',
+    'วัฒนธรรมองค์กร/การสื่อสาร',
+    'บทบาทหน้าที่คลุมเครือ',
+    'ความก้าวหน้าในอาชีพ',
+    'ขาดอิสระในการตัดสินใจ',
+    'ความสัมพันธ์ในที่ทำงาน',
+    'ครอบครัวไม่สนับสนุนการทำงาน',
+    'เครียดกับอาชีพเสริม',
+  ];
+  const checkedStressors = new Set(
+    [...document.querySelectorAll('input[name="stressor"]:checked')].map(el => el.value)
+  );
+  const stressorBinary = {};
+  STRESSOR_KEYS.forEach(k => { stressorBinary['s_' + k] = checkedStressors.has(k) ? 1 : 0; });
+
+  // suicideRisk ตาม criteria 8Q: 0=ไม่มี, 1-8=น้อย, 9-16=ปานกลาง, ≥17=รุนแรง
+  // ถ้าไม่ได้ทำ 8Q (sq8score=0 และไม่ผ่านเกณฑ์) → ไม่ได้ประเมิน
+  const didDo8Q = document.querySelector('input[name="sq1"]:checked') !== null;
+  let suicideRisk;
+  if (!didDo8Q) {
+    suicideRisk = 'ไม่ได้ประเมิน';
+  } else if (sq8score === 0) {
+    suicideRisk = 'ไม่มี';
+  } else if (sq8score <= 8) {
+    suicideRisk = 'น้อย';
+  } else if (sq8score <= 16) {
+    suicideRisk = 'ปานกลาง';
+  } else {
+    suicideRisk = 'รุนแรง';
+  }
+  const q2s = (parseInt((document.querySelector('input[name="q2_1"]:checked')||{value:0}).value) +
+               parseInt((document.querySelector('input[name="q2_2"]:checked')||{value:0}).value));
+  const q9items = [];
+  for (let i = 1; i <= 9; i++) {
+    const a = document.querySelector('input[name="q9_' + i + '"]:checked');
+    q9items.push(a ? parseInt(a.value) : 0);
+  }
+  const sq = {};
+  for (let i = 1; i <= 8; i++) {
+    const a = document.querySelector('input[name="sq' + i + '"]:checked');
+    sq['sq' + i] = a ? parseInt(a.value) : 0;
+  }
+  const record = {
+    id:            'SUB-' + Date.now(),
+    timestamp:     new Date().toLocaleString('th-TH'),
+    gender:        document.querySelector('input[name="gender"]:checked')?.value || '-',
+    age:           parseInt(document.getElementById('ageInput')?.value) || '-',
+    siteCode:      siteCode || '-',
+    empHash:       empHash || '-',
+    prevTreatment: document.querySelector('input[name="prevTreatment"]:checked')?.value || '-',
+    q2_1:          parseInt((document.querySelector('input[name="q2_1"]:checked')||{value:0}).value),
+    q2_2:          parseInt((document.querySelector('input[name="q2_2"]:checked')||{value:0}).value),
+    q2total:       q2s,
+    q9items:       q9items,
+    q9total:       q9score,
+    sq8total:      sq8score || 0,
+    sq3_1:         document.querySelector('input[name="sq3_1"]:checked')?.value || '-',
+    level:         level,
+    suicideRisk:   suicideRisk,
+    support:       document.querySelector('input[name="support"]:checked')?.value || '-',
+    contactPhone:  contactPhoneNumber || '-',
+    ...sq,
+    ...stressorBinary,
+  };
+  try {
+    const existing = JSON.parse(localStorage.getItem('mdd_responses') || '[]');
+    existing.push(record);
+    localStorage.setItem('mdd_responses', JSON.stringify(existing));
+  } catch(e) { console.warn('localStorage not available'); }
+  sendToSheet(record);  // ส่งไป Google Sheets ทันที
+}
+
+// ── Admin login / logout ────────────────────────────────────────
+function adminLogin() {
+  const pwd = document.getElementById('adminPwd').value;
+  if (pwd === ADMIN_PASSWORD) {
+    document.getElementById('adminLogin').style.display = 'none';
+    document.getElementById('adminDash').style.display = 'block';
+    document.getElementById('adminError').style.display = 'none';
+    loadAdminDash();
+  } else {
+    document.getElementById('adminError').style.display = 'block';
+    document.getElementById('adminPwd').value = '';
+  }
+}
+
+function adminLogout() {
+  document.getElementById('adminDash').style.display = 'none';
+  document.getElementById('adminLogin').style.display = 'block';
+  document.getElementById('adminPwd').value = '';
+}
+
+// ── Load dashboard ─────────────────────────────────────────────
+function loadAdminDash() {
+  const data = getResponses();
+  document.getElementById('adminSubtitle').textContent =
+    'ข้อมูลทั้งหมด ' + data.length + ' รายการ | บันทึกในเครื่องนี้เท่านั้น';
+
+  // KPIs
+  const kpiDefs = [
+    { label:'ผู้ตอบทั้งหมด',         value: data.length,                                                           color:'#2d6a4f' },
+    { label:'⚠️ ความเสี่ยงสูง',      value: data.filter(r => r.suicideRisk === '⚠️ มี').length,                  color:'#e63946' },
+    { label:'ต้องการความช่วยเหลือ',  value: data.filter(r => r.support === 'ต้องการ').length,                     color:'#2a4a9c' },
+    { label:'9Q เฉลี่ย',             value: data.length ? (data.reduce((s,r)=>s+r.q9total,0)/data.length).toFixed(1) : '-', color:'#d4a017' },
+  ];
+  document.getElementById('adminKPIs').innerHTML = kpiDefs.map(k =>
+    `<div style="background:#2a2724;border-radius:8px;padding:14px;text-align:center;border-left:3px solid ${k.color};">
+      <div style="font-size:1.6rem;font-weight:700;color:${k.color};">${k.value}</div>
+      <div style="font-size:0.78rem;color:#aaa;margin-top:4px;">${k.label}</div>
+    </div>`
+  ).join('');
+
+  // Populate site filter
+  const sites = [...new Set(data.map(r => r.siteCode).filter(s => s !== '-'))];
+  const filterSite = document.getElementById('filterSite');
+  filterSite.innerHTML = '<option value="">ทุกสาขา</option>' +
+    sites.map(s => `<option value="${s}">${s}</option>`).join('');
+
+  renderAdminTable();
+}
+
+function getResponses() {
+  try { return JSON.parse(localStorage.getItem('mdd_responses') || '[]'); }
+  catch(e) { return []; }
+}
+
+// ── Render table with filters ──────────────────────────────────
+function renderAdminTable() {
+  let data = getResponses();
+  const fSite  = document.getElementById('filterSite')?.value;
+  const fLevel = document.getElementById('filterLevel')?.value;
+  if (fSite)  data = data.filter(r => r.siteCode === fSite);
+  if (fLevel) data = data.filter(r => r.level === fLevel);
+
+  const tbody = document.getElementById('adminTableBody');
+  const empty = document.getElementById('adminEmpty');
+
+  if (!data.length) {
+    tbody.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+
+  tbody.innerHTML = data.map((r, idx) => {
+    const lv = LEVEL_LABEL[r.level] || { th: r.level, color: '#aaa' };
+    const crisis = r.suicideRisk === '⚠️ มี';
+    const rowBg = idx % 2 === 0 ? '#1f1c1a' : '#242120';
+    return `<tr style="background:${rowBg};">
+      <td style="padding:9px 12px;color:#ccc;white-space:nowrap;border-bottom:1px solid #2a2724;">${r.timestamp}</td>
+      <td style="padding:9px 12px;color:#52b788;border-bottom:1px solid #2a2724;font-size:0.78rem;">${r.siteCode}</td>
+      <td style="padding:9px 12px;color:#666;border-bottom:1px solid #2a2724;font-size:0.68rem;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${r.empHash}">${r.empHash.substring(0,16)}...</td>
+      <td style="padding:9px 12px;text-align:center;color:#ccc;border-bottom:1px solid #2a2724;">${r.gender}</td>
+      <td style="padding:9px 12px;text-align:center;color:#ccc;border-bottom:1px solid #2a2724;">${r.age || r.ageRange || '-'}</td>
+      <td style="padding:9px 12px;text-align:center;color:#ccc;border-bottom:1px solid #2a2724;">${r.q2total}</td>
+      <td style="padding:9px 12px;text-align:center;font-weight:700;color:${lv.color};border-bottom:1px solid #2a2724;">${r.q9total}</td>
+      <td style="padding:9px 12px;text-align:center;border-bottom:1px solid #2a2724;">
+        <span style="background:${lv.color}22;color:${lv.color};padding:3px 8px;border-radius:12px;font-size:0.75rem;font-weight:600;">${lv.th}</span>
+      </td>
+      <td style="padding:9px 12px;text-align:center;border-bottom:1px solid #2a2724;color:${crisis?'#ff4444':'#52b788'};">${r.suicideRisk}</td>
+      <td style="padding:9px 12px;text-align:center;color:#ccc;border-bottom:1px solid #2a2724;font-size:0.8rem;">${r.support}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ── Export to Excel ────────────────────────────────────────────
+function exportToExcel() {
+  if (typeof XLSX === 'undefined') {
+    alert('กำลังโหลด Excel library — กรุณารอสักครู่แล้วลองอีกครั้ง'); return;
+  }
+  const data = getResponses();
+  if (!data.length) { alert('ยังไม่มีข้อมูล'); return; }
+
+  const wb = XLSX.utils.book_new();
+
+  // ── Sheet 1: Responses ──
+  const headers = [
+    'รหัสการส่ง','วันที่บันทึก','เพศ','อายุ (ปี)',
+    'รหัสสาขา','รหัสปิดบัง (พนักงาน)','รับการรักษามาก่อน',
+    '2Q ข้อ1','2Q ข้อ2','2Q รวม',
+    '9Q-1','9Q-2','9Q-3','9Q-4','9Q-5','9Q-6','9Q-7','9Q-8','9Q-9','9Q รวม',
+    '8Q รวม','8Q ข้อ3.1',
+    'ระดับซึมเศร้า','ความเสี่ยงการฆ่าตัวตาย','ต้องการความช่วยเหลือ','เบอร์ติดต่อกลับ','ปัจจัยความเครียด'
+  ];
+  const rows = data.map(r => [
+    r.id, r.timestamp, r.gender, r.age,
+    r.siteCode, r.empHash, r.prevTreatment,
+    r.q2_1, r.q2_2, r.q2total,
+    ...(r.q9items || Array(9).fill(0)), r.q9total,
+    r.sq8total || 0, r.sq3_1 || '-',
+    LEVEL_LABEL[r.level]?.th || r.level,
+    r.suicideRisk, r.support, r.contactPhone || '-', r.stressors
+  ]);
+  const ws1 = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+
+  // Column widths
+  ws1['!cols'] = [
+    {wch:14},{wch:20},{wch:8},{wch:10},
+    {wch:16},{wch:52},{wch:14},
+    {wch:8},{wch:8},{wch:8},
+    ...Array(9).fill({wch:7}),{wch:8},
+    {wch:20},{wch:16},{wch:16},{wch:40}
+  ];
+  XLSX.utils.book_append_sheet(wb, ws1, 'Responses');
+
+  // ── Sheet 2: Summary ──
+  const levels = ['none','minimal','mild','moderate','severe','crisis'];
+  const summaryData = [
+    ['สรุปผลการคัดกรอง MDD', '', `Export เมื่อ: ${new Date().toLocaleString('th-TH')}`],
+    [],
+    ['ผู้ตอบทั้งหมด', data.length, ''],
+    ['⚠️ ความเสี่ยงสูง', data.filter(r=>r.suicideRisk==='⚠️ มี').length, ''],
+    ['ต้องการความช่วยเหลือ', data.filter(r=>r.support==='ต้องการ').length, ''],
+    ['9Q เฉลี่ย', data.length ? +(data.reduce((s,r)=>s+r.q9total,0)/data.length).toFixed(2) : 0, ''],
+    [],
+    ['ระดับ','จำนวน','%'],
+    ...levels.map(lv => {
+      const n = data.filter(r=>r.level===lv).length;
+      return [LEVEL_LABEL[lv]?.th||lv, n, data.length ? +(n/data.length*100).toFixed(1) : 0];
+    }),
+    [],
+    ['รหัสสาขา','จำนวน',''],
+    ...[...new Set(data.map(r=>r.siteCode))].map(s => [s, data.filter(r=>r.siteCode===s).length, '']),
+  ];
+  const ws2 = XLSX.utils.aoa_to_sheet(summaryData);
+  ws2['!cols'] = [{wch:24},{wch:12},{wch:10}];
+  XLSX.utils.book_append_sheet(wb, ws2, 'Summary');
+
+  // Download
+  const date = new Date().toISOString().slice(0,10);
+  XLSX.writeFile(wb, `MDD_Screening_Export_${date}.xlsx`);
+}
+
+// ── Clear all data ─────────────────────────────────────────────
+function clearAllData() {
+  if (!confirm('⚠️ ลบข้อมูลทั้งหมดในเครื่องนี้?\nไม่สามารถกู้คืนได้ — กรุณา Export ก่อนลบ')) return;
+  localStorage.removeItem('mdd_responses');
+  loadAdminDash();
+}
+
+// ── Stressor exclusivity ───────────────────────────────────────
+function handleStressorNone(cb) {
+  if (cb.checked) {
+    document.querySelectorAll('input[name="stressor"]').forEach(el => {
+      if (el.value !== 'ไม่มี') { el.checked = false; el.closest('.option-card')?.classList.remove('selected'); }
+    });
+    cb.closest('.option-card')?.classList.add('selected');
+  }
+}
+function handleStressorOther(cb) {
+  const noneBox = document.querySelector('input[name="stressor"][value="ไม่มี"]');
+  if (noneBox) { noneBox.checked = false; noneBox.closest('.option-card')?.classList.remove('selected'); }
+}
+
+// ── 8Q: sq3 toggle row 3.1 ────────────────────────────────────
+function onSq3Change(val) {
+  const row = document.getElementById('row-sq3_1');
+  const timeCell = document.querySelector('#row-sq1 td:first-child');
+  if (val === 1) {
+    row.style.display = 'table-row';
+    if (timeCell) timeCell.rowSpan = 8;
+  } else {
+    row.style.display = 'none';
+    document.querySelectorAll('input[name="sq3_1"]').forEach(r => r.checked = false);
+    if (timeCell) timeCell.rowSpan = 7;
+  }
+}
+function selectSq31(val) {
+  document.querySelectorAll('input[name="sq3_1"]').forEach(r => {
+    r.checked = (r.value === val);
+  });
+}
+function closeSq3Popup() {
+  document.getElementById('popup-sq3').classList.remove('popup-open');
+}
+
+// ── 8Q scoring per image criteria ─────────────────────────────
+// คะแนน: sq1=1, sq2=2, sq3=6, sq4=8, sq5=9, sq6=4, sq7=10, sq8=4
+const SQ_SCORES = [1, 2, 6, 8, 9, 4, 10, 4];
+function calc8QScore() {
+  let total = 0;
+  for (let i = 1; i <= 8; i++) {
+    const a = document.querySelector('input[name="sq' + i + '"]:checked');
+    if (a && a.value === '1') total += SQ_SCORES[i - 1];
+  }
+  // ข้อ 3.1: ตอบ "ไม่ได้" (ควบคุมไม่ได้) = +8 คะแนน
+  const sq3_1 = document.querySelector('input[name="sq3_1"]:checked');
+  if (sq3_1 && sq3_1.value === 'ไม่ได้') total += 8;
+  return total;
+}
+
+// ── Support popup ──────────────────────────────────────────────
+let contactPhoneNumber = '';
+function validateSec5() {
+  clearErrors();
+  const supportVal = document.querySelector('input[name="support"]:checked')?.value;
+  if (!supportVal) { markError('field-support', 'err-support'); return; }
+  if (supportVal === 'ต้องการ') {
+    document.getElementById('popup-contact').classList.add('popup-open');
+  } else {
+    submitForm();
+  }
+}
+function saveContactPhone() {
+  const phone = document.getElementById('contactPhone').value.trim();
+  contactPhoneNumber = phone;
+  document.getElementById('popup-contact').classList.remove('popup-open');
+  submitForm();
+}
+function skipContactPhone() {
+  contactPhoneNumber = '';
+  document.getElementById('popup-contact').classList.remove('popup-open');
+  submitForm();
+}
+
+// ── Highlight selected cards ───────────────────────────────────
+document.addEventListener('change', e => {
+  if (e.target.type !== 'radio') return;
+  const name = e.target.name;
+  document.querySelectorAll('input[name="' + name + '"]').forEach(r => {
+    r.closest('.option-card')?.classList.remove('selected');
+    r.closest('.star-opt')?.classList.remove('selected');
+  });
+  e.target.closest('.option-card')?.classList.add('selected');
+  e.target.closest('.star-opt')?.classList.add('selected');
+});
+</script>
+</body>
+</html>
